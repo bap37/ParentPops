@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-def Matrix_c_init():
+def Matrix_c_init(dfpre, dfpost):
     binsize = 0.02
     #cI_mean, cI_l, cI_r = params                                                                                                    
     send = {}
@@ -32,7 +32,7 @@ def Matrix_c_init():
     cI_m = np.copy(combined)
     return cI_m #and the end result - an NxN probability matrix that we'll use to process our data. 
 
-def Matrix_x_init(): #same as the colour probability matrix, but for stretch (x1).
+def Matrix_x_init(dfpre, dfpost): #same as the colour probability matrix, but for stretch (x1).
     binsize = .2
     send = {}
     length = {}
