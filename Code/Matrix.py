@@ -7,7 +7,7 @@ def Matrix_c(params, dfk, cI_m, flag, debug=False):
     cI_n = 2 #colour is always Gaussian
     #send = {}
     #length = {}
-    bins = np.arange(-.4,.41,.binsize)
+    bins = np.arange(-.4,.41,binsize)
     cdatI = np.histogram(dfk.c.values, bins=bins)[0] #A histogram of the data
 
     cI = [1, cI_mean, cI_l, cI_r, cI_n]
