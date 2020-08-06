@@ -1,8 +1,13 @@
 #Contains the functions needed to find the chi2. 
+EXTRA_FUNC_FILEPATH = 'replaceme'
+
 import numpy as np
 import pandas as pd
+import sys
+sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
+import Functions #I will need to include this
 
-def Matrix_c(params, dfk, cI_m, flag, debug=False):
+def Matrix_c(params, dfk, cI_m, binsize, debug=False):
     cI_mean, cI_l, cI_r, cI_n = params
     cI_n = 2 #colour is always Gaussian
     #send = {}
@@ -13,7 +18,7 @@ def Matrix_c(params, dfk, cI_m, flag, debug=False):
     cI = [1, cI_mean, cI_l, cI_r, cI_n]
     input_cI = []
     for x in ((bins[1:] + bins[:-1])/2):
-        input_cI.append(agauss(x, *cI))
+        input_cI.append(Functions.agauss(x, *cI))
     input_cI = np.array(input_cI) #this creates a probability distribution for our estimate at the true population
     
     MP = np.matmul(input_cI, cI_m) #We take our true populaiton and process it through the probability matrix. This tells us what it should look like after being observed in a real telescope. Roughly.
@@ -25,7 +30,7 @@ def Matrix_c(params, dfk, cI_m, flag, debug=False):
     Delta_cerr = np.sqrt(np.abs(Delta_cerr)) #taking the square root.
     chi2 = []
     for i in range(len(Delta_c)):
-        temp = ((Delta_c[i]*flag[i]))/((Delta_cerr[i])) #This is leftover from an error flagging protocol I had for a while. Certain bins were causing some huge statistcal biases, so this will ignore them in the chi2 calculation. flag always starts as 1.
+        temp = ((Delta_c[i]))/((Delta_cerr[i])) #This is leftover from an error flagging protocol I had for a while. Certain bins were causing some huge statistcal biases, so this will ignore them in the chi2 calculation. flag always starts as 1.
         temp = temp**2
         chi2.append(temp) #It's a chi2.
     chi2 = np.array(chi2) 
@@ -46,7 +51,7 @@ def Matrix_c(params, dfk, cI_m, flag, debug=False):
 
 
 
-def Matrix_x(params, dfk, xI_m, flag, debug=False): #same as Matrix_c, but for stretch.
+def Matrix_x(params, dfk, xI_m, binsize, debug=False): #same as Matrix_c, but for stretch.
     xI_mean, xI_l, xI_r, xI_n = params
     bins = np.arange(-3,3.1,binsize)
 
@@ -56,7 +61,7 @@ def Matrix_x(params, dfk, xI_m, flag, debug=False): #same as Matrix_c, but for s
     xI = [1, xI_mean, xI_l, xI_r, xI_n]
     input_xI = []
     for x in ((bins[1:] + bins[:-1])/2):
-        input_xI.append(agauss(x, *xI))
+        input_xI.append(Functions.agauss(x, *xI))
     input_xI = np.array(input_xI)
     
     MP = np.matmul(input_xI, xI_m)
@@ -70,7 +75,7 @@ def Matrix_x(params, dfk, xI_m, flag, debug=False): #same as Matrix_c, but for s
     Delta_xerr = np.sqrt(np.abs(Delta_xerr))
     chi2 = []
     for i in range(len(Delta_x)):
-        temp = ((Delta_x[i]*flag[i]))/((Delta_xerr[i]))
+        temp = ((Delta_x[i]))/((Delta_xerr[i]))
         temp = temp**2
         chi2.append(temp)
     chi2 = np.array(chi2)
