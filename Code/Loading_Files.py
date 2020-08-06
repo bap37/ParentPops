@@ -1,8 +1,8 @@
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
 
-EXTRA_FUNC_FILEPATH = 'I need to point to ParentPop/Code/'
-REF_FP = 'I need to point to the unzipped version of REF.zip!'
+EXTRA_FUNC_FILEPATH = 'replaceme' #'I need to point to ParentPop/Code/'
+REF_FP = 'replaceme' #I need to point to the unzipped version of REF.zip!'
 
 #Ideally we'd like to be able to load a couple different options here.
 #Select arbitrary combination of SURVEY/TYPE/MODEL
@@ -51,6 +51,11 @@ I_x1 = [float(i) for i in I_x1]
 SURVEY= args.SURVEY
 MODEL = args.MODEL
 TYPE = args.TYPE
+
+xbinsize=.2
+cbinsize=0.02
+
+
 if SURVEY == 'HZ': #if we want to do all targeted surveys at once.
     SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1', 'FOUND']
 
@@ -68,7 +73,6 @@ if SURVEY is None:
 
  
 print('You are looking at '+str(SURVEY)+' with the '+str(MODEL)+' model and confirmed as '+str(TYPE))
-
 
 
 # ['DES', 'SDSS', 'FOUND', 'SNLS', 'PS1'] The five high-redshift surveys. 
@@ -123,9 +127,9 @@ for s in SURVEY:
 
  
     if Param == 'c':
-        matrixdic[s+Param] = MI.Matrix_c_init(dfpre, dfpost)
+        matrixdic[s+Param] = MI.Matrix_c_init(dfpre, dfpost, cbinsize)
     else:
-        matrixdic[s+Param] = MI.Matrix_x_init(dfpre, dfpost)
+        matrixdic[s+Param] = MI.Matrix_x_init(dfpre, dfpost, xbinsize)
     if count == 0:
         DATOT = dfdata[['CID','x1', 'c', 'HOST_LOGMASS', 'zHD']] #The important parameters.
     else:
@@ -144,3 +148,7 @@ for num,s in enumerate(SURVEY):
         newmatrix += matrixdic[s+Param]*(lensdic[s+Param] / q)
 
 print(len(DATOT))
+
+import Optimiser
+Optimiser.Optimiser(Param,DATOT, 4, dfpre, dfpost, .2)
+
