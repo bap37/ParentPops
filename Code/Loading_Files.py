@@ -1,7 +1,7 @@
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
 
-EXTRA_FUNC_FILEPATH = 'replaceme' #'I need to point to ParentPop/Code/'
+#EXTRA_FUNC_FILEPATH = 'replaceme' #'I need to point to ParentPop/Code/'
 REF_FP = 'replaceme' #I need to point to the unzipped version of REF.zip!'
 
 #Ideally we'd like to be able to load a couple different options here.
@@ -15,7 +15,7 @@ REF_FP = 'replaceme' #I need to point to the unzipped version of REF.zip!'
 import pandas as pd
 import numpy as np
 import sys
-sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
+#sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
 import Functions 
 import MI
 
@@ -149,6 +149,7 @@ for num,s in enumerate(SURVEY):
 
 print(len(DATOT))
 
-import Optimiser
-Optimiser.Optimiser(Param,DATOT, 4, dfpre, dfpost, .2)
+import Optimiser #TODO: Have loading_files function to be main, then, grab arange from optimizer_mass and print the outputs to a file, instead of stdout
+Optimiser.Optimiser(Param,DATOT, 4, dfpre, dfpost, .2, None)
+
 

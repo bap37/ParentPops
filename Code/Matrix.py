@@ -1,10 +1,10 @@
 #Contains the functions needed to find the chi2. 
-EXTRA_FUNC_FILEPATH = 'replaceme'
+#EXTRA_FUNC_FILEPATH = 'replaceme'
 
 import numpy as np
 import pandas as pd
 import sys
-sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
+#sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
 import Functions #I will need to include this
 
 def Matrix_c(params, dfk, cI_m, binsize, debug=False):
