@@ -27,10 +27,13 @@ from scipy.stats import binned_statistic
 
 #Commented options don't work right now.
 
+#Most important parameters are SURVEY, Param, MODEL, TYPE
+
 parser.add_argument('--SURVEY', help='Choose the Survey', nargs='+') #It would be nice to get this to work. To switch from the cumulative to a specific survey on command.
-parser.add_argument('--Param', help='x1 or c')
+parser.add_argument('--PARAM', help='x1 or c')
 parser.add_argument('--I_c', help='Initial guess for c', default=[0,.1,.1,2], nargs = '+')
 parser.add_argument('--I_x1', help='Initial guess for x1', default=[0,1,1,2], nargs = '+')
+parser.add_argument('--SHAPE', help='How do you want to model these parent populations? GGN, Gaussian, DGaussian?', default='GGN')
 #parser.add_argument('--Choice', help='Which bin you wish to investigate') LOW priority, but would be nice to select a specific range to investigate
 #parser.add_argument('--Redshift', help='If you want to investigate redshift bins rather than mass', default=False) MEDIUM priority. Not the point of the paper, but super easy to implement. Just change masses to redshifts.
 #parser.add_argument('--Test', help='Tests an iteration, more print statements', default=False) Junk.
@@ -41,7 +44,7 @@ parser.add_argument('--TYPE', help='Is your sample spectroscopic? default= No.')
 #A choice of distribution shapes is desired but difficult. Can discuss more. 
 
 args = parser.parse_args()
-Param = args.Param
+Param = args.PARAM
 I_c = args.I_c
 I_c = [float(i) for i in I_c]
 I_x1 = args.I_x1
@@ -51,6 +54,7 @@ I_x1 = [float(i) for i in I_x1]
 SURVEY= args.SURVEY
 MODEL = args.MODEL
 TYPE = args.TYPE
+SHAPE = args.SHAPE
 
 xbinsize=.2
 cbinsize=0.02
@@ -63,7 +67,9 @@ if SURVEY == 'HZ': #if we want to do all targeted surveys at once.
 
 IDSURVEY_Dictionary = {1:'SDSS', 4:'SNLS', 10:'DES', 15:'PS1', 150:'FOUND'}
 
-
+SH_DIC = {'GGN': ['mean', 'stdl', 'stdr', 'n'], 'Gaussian':['mean', 'std'], 
+'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['mean', 'stdl', 'stdr']}
+SHAPE2 = SH_DIC[SHAPE]
 import distutils.util
 
 if SURVEY is None:
@@ -99,6 +105,9 @@ for s in SURVEY:
         if TYPE == 'PHOT':
             print(REF_FP+SURVEY+TYPE+MODEL)
             print("That file does not exist! Are you sure there's a photometric sample available!")
+    except NameError:
+        print('Probably forgot a slash somewhere, check your filepath')
+        #print(filepath)
         
     #This block needs to be run for every SURVEY+TYPE+MODEL. 
     print('Loading True Population...')
@@ -114,7 +123,7 @@ for s in SURVEY:
     #dfpre.S2x1 = pd.to_numeric(dfpre.S2x1, errors='coerce') #Likewise, this is the "true" stretch.
     #I think I've upgraded the loading procedures enough that the forcing numeric can be commented out. Leaving it just in case.
 
-    print(str(len(dfdata.loc[dfdata.HOST_LOGMASS > 3])/len(dfdata))+"% of the sample can be used...") #Just reading out the number of supernovae in each survey
+    print(str(100*len(dfdata.loc[dfdata.HOST_LOGMASS > 3])/len(dfdata))+"% of the sample can be used...") #Just reading out the number of supernovae in each survey
 
     try: 
         print('That was '+str(IDSURVEY_Dictionary[np.unique(dfdata.IDSURVEY.values)[0]])+' that you just loaded!') #printing the SURVEY ID. 
@@ -149,7 +158,6 @@ for num,s in enumerate(SURVEY):
 
 print(len(DATOT))
 
-import Optimiser #TODO: Have loading_files function to be main, then, grab arange from optimizer_mass and print the outputs to a file, instead of stdout
-Optimiser.Optimiser(Param,DATOT, 4, dfpre, dfpost, .2, None)
-
+import Optimiser
+Optimiser.Optimiser(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
 

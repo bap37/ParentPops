@@ -1,5 +1,5 @@
 #Contains the functions needed to find the chi2. 
-#EXTRA_FUNC_FILEPATH = 'replaceme'
+EXTRA_FUNC_FILEPATH = 'replace me'
 
 import numpy as np
 import pandas as pd
@@ -7,19 +7,31 @@ import sys
 #sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
 import Functions #I will need to include this
 
-def Matrix_c(params, dfk, cI_m, binsize, debug=False):
-    cI_mean, cI_l, cI_r, cI_n = params
-    cI_n = 2 #colour is always Gaussian
-    #send = {}
-    #length = {}
+def Matrix_c(params, dfk, cI_m, binsize, SHAPE2, debug=False):
     bins = np.arange(-.4,.41,binsize)
     cdatI = np.histogram(dfk.c.values, bins=bins)[0] #A histogram of the data
 
-    cI = [1, cI_mean, cI_l, cI_r, cI_n]
-    input_cI = []
-    for x in ((bins[1:] + bins[:-1])/2):
-        input_cI.append(Functions.agauss(x, *cI))
-    input_cI = np.array(input_cI) #this creates a probability distribution for our estimate at the true population
+    if SHAPE2 == 'GGN':    
+        cI_mean, cI_l, cI_r = params
+        cI = [1, cI_mean, cI_l, cI_r]
+        input_cI = []
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_cI.append(Functions.agauss(x, *cI))
+        input_cI = np.array(input_cI)
+    elif SHAPE2 == 'Gaussian':
+        cI_mean, cI_std = params
+        cI = [1, cI_mean, cI_std]
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_cI.append(Functions.gauss(x, *cI))
+        input_cI = np.array(input_cI)
+    elif SHAPE2 == 'DGaussian':
+        a1, mean1, std1, a2, mean2, std2 = params
+        cI = [a1, mean1, std1, a2, mean2, std2]
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_cI.append(Functions.dgauss(x, *cI))
+        input_cI = np.array(input_cI)
+
+
     
     MP = np.matmul(input_cI, cI_m) #We take our true populaiton and process it through the probability matrix. This tells us what it should look like after being observed in a real telescope. Roughly.
     MP = MP*((np.sum(cdatI))/np.sum(MP)) #normalising it.
@@ -51,18 +63,29 @@ def Matrix_c(params, dfk, cI_m, binsize, debug=False):
 
 
 
-def Matrix_x(params, dfk, xI_m, binsize, debug=False): #same as Matrix_c, but for stretch.
-    xI_mean, xI_l, xI_r, xI_n = params
+def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c, but for stretch.
     bins = np.arange(-3,3.1,binsize)
-
     xdatI = np.histogram(dfk.x1.values, bins=bins)[0]
     
-    
-    xI = [1, xI_mean, xI_l, xI_r, xI_n]
-    input_xI = []
-    for x in ((bins[1:] + bins[:-1])/2):
-        input_xI.append(Functions.agauss(x, *xI))
-    input_xI = np.array(input_xI)
+    if SHAPE2 == 'GGN':    
+        xI_mean, xI_l, xI_r, xI_n = params
+        xI = [1, xI_mean, xI_l, xI_r, xI_n]
+        input_xI = []
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_xI.append(Functions.ggn(x, *xI))
+        input_xI = np.array(input_xI)
+    elif SHAPE2 == 'Gaussian':
+        xI_mean, xI_std = params
+        xI = [1, xI_mean, xI_std]
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_xI.append(Functions.gauss(x, *xI))
+        input_xI = np.array(input_xI)
+    elif SHAPE2 == 'DGaussian':
+        a1, mean1, std1, a2, mean2, std2 = params
+        xI = [a1, mean1, std1, a2, mean2, std2]
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_xI.append(Functions.dgauss(x, *xI))
+        input_xI = np.array(input_xI)
     
     MP = np.matmul(input_xI, xI_m)
     MP = MP*((np.sum(xdatI))/np.sum(MP))
