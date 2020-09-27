@@ -11,7 +11,7 @@ parser=argparse.ArgumentParser()
 import emcee
 from scipy.stats import binned_statistic
 import os
-import shutil
+import csv
 
 def Optimiser(Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE): #better explained in Optimiser_Mass
     dfk = dfdata
@@ -97,13 +97,27 @@ class Optimizer_Calculation:
         
         return return_list
         
-    def write_to_file(self):
+    def write_to_file(self, result_list, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series):
         if not os.path.exists("output"):
             os.mkdir("output")
-        else:
-            shutil.rmtree("output")
-            os.mkdir("output")
-            
+
+        file_name = "output/" + TYPE + "_" + SHAPE + "_" +  MODEL
+        for survey in SURVEY:
+            file_name += "_" + survey
+        file_name += ".tsv" 
+
+        with open(file_name, mode='w', newline='\n') as outFile:
+            outFileWriter = csv.writer(outFile, delimiter = '\t')
+            outFileWriter.writerow(SHAPE2)
+            if(is_series):
+                # We are dealing with multiple iterations
+                for result in result_list:
+                    row = [str(r) for r in result]
+                    outFileWriter.writerow(row)
+            else:
+                row = [str(result) for result in result_list]
+                outFileWriter.writerow(row)
+
         print("Written To File") #Also do check for if multiple surveys and also print that note in the file name
     
     def optimize_in_range(self, Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE):
