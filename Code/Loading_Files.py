@@ -165,6 +165,9 @@ print(len(DATOT))
 import Optimiser
 
 optimizer = Optimiser.Optimizer_Calculation()
-optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING  MASS RANGE
-#optimizer.optimize_secondary_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
+result = optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING  MASS RANGE
+# result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
+
+optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING MASS RANGE
+# optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
 
