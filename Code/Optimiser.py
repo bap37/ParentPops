@@ -114,7 +114,17 @@ class Optimizer_Calculation:
     def row_from_dictionary(self, dictionary, SHAPE2):
         row = [dictionary["MASS"]]
         for shape in SHAPE2:
-            for result in dictionary[shape]:
-                row.append(str(result))
+            try:
+                for result in dictionary[shape]:
+                    row.append(str(result))
+            except KeyError:
+                    for rest in range(2): #This absolutely needs to be fixed.
+                        if rest == 0:
+                            row.append(str(2))
+                        else:
+                            row.append(str(0))
+
+            #for result in dictionary[shape]:
+             #   row.append(str(result))
         return row
 
