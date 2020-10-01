@@ -3,7 +3,6 @@ EXTRA_FUNC_FILEPATH = 'replace me'
 import pandas as pd
 import numpy as np
 import sys
-sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
 import Functions #I will need to include this
 import MI
 import Matrix
@@ -11,52 +10,111 @@ import argparse
 parser=argparse.ArgumentParser()
 import emcee
 from scipy.stats import binned_statistic
-
-def Optimiser(Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE): #better explained in Optimiser_Mass
-    dfk = dfdata
-    DIM = len(SHAPE2)
-    if Param == 'c':
-        cI_m = MI.Matrix_c_init(dfpre, dfpost, binsize)
-        if DIM == 4:
-            nwalkers = 2*(DIM + 1) - 1
-            ndim = DIM - 1 
-        else: 
-            nwalkers = 2*(DIM + 1) 
-            ndim = DIM 
-        p0 = np.random.rand(nwalkers, ndim)
-        p0 = p0/100
-        p0 = np.abs(p0)    
-    else:
-        cI_m = MI.Matrix_x_init(dfpre, dfpost, binsize)
-        nwalkers = 2*(DIM + 1)
-        ndim = DIM
-        p0 = np.random.rand(nwalkers, ndim)
-        p0 = p0/100
-        p0 = np.abs(p0)
-    if Param == 'c':
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, Matrix.Matrix_c, args=[dfk, cI_m, binsize, SHAPE])
-    else:
-        sampler = emcee.EnsembleSampler(nwalkers, ndim, Matrix.Matrix_x, args=[dfk, cI_m, binsize, SHAPE])
-    state = sampler.run_mcmc(p0, 1000, progress=True)
-    sampler.reset()
-    sampler.run_mcmc(state, 10000, progress=True)
-    samples = sampler.get_chain()
-    print(Param)
-    for h in range((ndim)):
-        print([np.mean(samples[:,:,h]), np.std(samples[:,:,h])], SHAPE2[h])
-
-    
-#Now we need to cycle through masses
-#masses = np.arange(8, 13.6, 0.2)
-#With window of 0.6 right now - eg 0.2 +/- 0.6 
-
+import os
+import csv     
 #If we want redshift, it'll need to be in log scale - get back to you on that
 
+class Optimizer_Calculation:
 
+    def optimize(self, Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE, MASS):
+        dfk = dfdata
+        return_dictionary = {}
+        
+        if MASS != None:
+            window = 0.6
+            dfk = dfk.loc[(dfk.HOST_LOGMASS < MASS +window) & (dfk.HOST_LOGMASS >= MASS - window)]
 
-""" 
+            #Minimum length: There's no point calculating if the number of supernovae is below 50
+            if len(dfk) < 50:
+                return return_dictionary
 
-if __name__ == "__main__": 
-    Optimiser_Mass()
+            return_dictionary["MASS"] = str(round(MASS,3))
+        else:
+            return_dictionary["MASS"] = "ALL"
 
- """
+        DIM = len(SHAPE2)
+        if Param == 'c':
+            cI_m = MI.Matrix_c_init(dfpre, dfpost, binsize)
+            if DIM == 4: #transfer this into optimizer method
+                nwalkers = 2*(DIM + 1) - 1
+                ndim = DIM - 1 
+            else: 
+                nwalkers = 2*(DIM + 1) 
+                ndim = DIM 
+            p0 = np.random.rand(nwalkers, ndim)
+            p0 = p0/100
+            p0 = np.abs(p0)    
+        else:
+            cI_m = MI.Matrix_x_init(dfpre, dfpost, binsize)
+            nwalkers = 2*(DIM + 1)
+            ndim = DIM
+            p0 = np.random.rand(nwalkers, ndim)
+            p0 = p0/100
+            p0 = np.abs(p0)
+        if Param == 'c':
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, Matrix.Matrix_c, args=[dfk, cI_m, binsize, SHAPE])
+        else:
+            sampler = emcee.EnsembleSampler(nwalkers, ndim, Matrix.Matrix_x, args=[dfk, cI_m, binsize, SHAPE])
+        state = sampler.run_mcmc(p0, 1000, progress=True)
+        sampler.reset()
+        sampler.run_mcmc(state, 10000, progress=True)
+        samples = sampler.get_chain()
+        print(Param)
+
+        for h in range((ndim)):
+            print([np.mean(samples[:,:,h]), np.std(samples[:,:,h])], SHAPE2[h])
+            return_dictionary[SHAPE2[h]] = [np.mean(samples[:,:,h]), np.std(samples[:,:,h])]
+        
+        return return_dictionary
+    
+    def optimize_in_range(self, Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE):
+        collected_result = []
+        
+        for m in np.arange(6, 14, .2):
+            calculation = self.optimize(Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE, m)
+            
+            #A return of an empty dictionary means that specific mass doesn't have enough supernovae
+            #to have been worth calculating on. So it's not part of the output.
+            if len(calculation) == 0:
+                pass
+            else:
+                collected_result.append(calculation)
+            
+        
+        return collected_result
+    
+    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param):
+        if not os.path.exists("output"):
+            os.mkdir("output")
+
+        file_name = "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param
+        for survey in SURVEY:
+            file_name += "_" + survey
+        file_name += ".tsv" 
+
+        with open(file_name, mode='w', newline='\n') as outFile:
+            outFileWriter = csv.writer(outFile, delimiter = '\t')
+
+            header = ["MASS"]
+            for column in SHAPE2:
+                header.append(column)
+                header.append(column + '_error')
+            outFileWriter.writerow(header)
+
+            if(is_series):
+                # We are dealing with multiple iterations
+                for result in result_dictionary:
+                    outFileWriter.writerow(self.row_from_dictionary(result, SHAPE2))
+
+            else:
+                outFileWriter.writerow(self.row_from_dictionary(result_dictionary, SHAPE2))
+
+        print("Written To File")
+    
+    def row_from_dictionary(self, dictionary, SHAPE2):
+        row = [dictionary["MASS"]]
+        for shape in SHAPE2:
+            for result in dictionary[shape]:
+                row.append(str(result))
+        return row
+

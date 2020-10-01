@@ -1,8 +1,10 @@
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
 
-EXTRA_FUNC_FILEPATH = 'replaceme' #'I need to point to ParentPop/Code/'
-REF_FP = 'replaceme' #I need to point to the unzipped version of REF.zip!'
+REF_FP = "replaceme" #I need to point to the unzipped version of REF.zip!'
+if REF_FP == "replaceme":
+    print("Did not replace REF_FP with unzipped REF folder.")
+    exit()
 
 #Ideally we'd like to be able to load a couple different options here.
 #Select arbitrary combination of SURVEY/TYPE/MODEL
@@ -24,6 +26,8 @@ import argparse
 parser=argparse.ArgumentParser()
 import emcee
 from scipy.stats import binned_statistic
+
+
 
 #Commented options don't work right now.
 
@@ -159,5 +163,11 @@ for num,s in enumerate(SURVEY):
 print(len(DATOT))
 
 import Optimiser
-Optimiser.Optimiser(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
+
+optimizer = Optimiser.Optimizer_Calculation()
+result = optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING  MASS RANGE
+# result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
+
+optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING MASS RANGE
+# optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
 

@@ -4,7 +4,7 @@ EXTRA_FUNC_FILEPATH = 'replace me'
 import numpy as np
 import pandas as pd
 import sys
-sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
+#sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
 import Functions #I will need to include this
 
 def Matrix_c(params, dfk, cI_m, binsize, SHAPE2, debug=False):
