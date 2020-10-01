@@ -45,6 +45,7 @@ parser.add_argument('--SHAPE', help='How do you want to model these parent popul
 parser.add_argument('--MODEL', help='Toggle to True if using the C11 scatter model')  
 #parser.add_argument('--Iteration', help='Are you using a Gaussian distribution? If so, this should be true.', default=False) #junk.
 parser.add_argument('--TYPE', help='Is your sample spectroscopic? default= No.') #HIGH Priority. Photometry is the future of SNIa cosmology
+parser.add_argument('--ITERATIVE', help='Make this option False if you want to marginalise over MASS', default=True)
 #A choice of distribution shapes is desired but difficult. Can discuss more. 
 
 args = parser.parse_args()
@@ -59,6 +60,7 @@ SURVEY= args.SURVEY
 MODEL = args.MODEL
 TYPE = args.TYPE
 SHAPE = args.SHAPE
+IT = args.ITERATIVE
 
 xbinsize=.2
 cbinsize=0.02
@@ -165,9 +167,11 @@ print(len(DATOT))
 import Optimiser
 
 optimizer = Optimiser.Optimizer_Calculation()
-result = optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING  MASS RANGE
-# result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
-
-optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param) #COMMENT THIS OUT AND UNCOMMENT THE ONE BELOW IF DOING MASS RANGE
-# optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
-
+if IT == True:
+    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
+elif IT ==False:
+    result = optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
+else:
+    print('oops, you hecked up!')
