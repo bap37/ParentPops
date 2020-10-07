@@ -62,6 +62,9 @@ TYPE = args.TYPE
 SHAPE = args.SHAPE
 IT = args.ITERATIVE
 
+import distutils.util
+IT = distutils.util.strtobool(IT)
+
 xbinsize=.2
 cbinsize=0.02
 
@@ -163,14 +166,14 @@ for num,s in enumerate(SURVEY):
         newmatrix += matrixdic[s+Param]*(lensdic[s+Param] / q)
 
 print(len(DATOT))
-
+print(IT)
 import Optimiser
 
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
     result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
-elif IT ==False:
+elif IT == False:
     result = optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None)
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
 else:

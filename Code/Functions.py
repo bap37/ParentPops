@@ -25,11 +25,14 @@ def ggn(x,a,x0,sigma_l,sigma_r,n): #We need to propose an actual input distribut
 def gauss(x,a,x0,sigma): 
     return a*np.exp(-np.abs(x-x0)**2/(2*sigma**2))
 
+#def dgauss(x,a1,x0_1,sigma_1,a2,x0_2, sigma_2): 
+#    if x < 0:
+#        return a1*np.exp(-np.abs(x-x0_1)**2/(2*sigma_1**2))
+#    else:
+#        return a2*np.exp(-np.abs(x-x0_2)**2/(2*sigma_2**2))
+
 def dgauss(x,a1,x0_1,sigma_1,a2,x0_2, sigma_2): 
-    if x < 0:
-        return a1*np.exp(-np.abs(x-x0_1)**2/(2*sigma_1**2))
-    else:
-        return a2*np.exp(-np.abs(x-x0_2)**2/(2*sigma_2**2))
+    return a1*np.exp(-np.abs(x-x0_1)**2/(2*sigma_1**2)) + a2*np.exp(-np.abs(x-x0_2)**2/(2*sigma_2**2))
 
 def agauss(x,a,x0,sigma_l,sigma_r): #We need to propose an actual input distribution. Here I've chosen an asymmetric Gaussian. We can talk about whether or not this is the right choice, but it provides four different parameters. If that sounds overfitted, I have opinions!
     if x < x0:
