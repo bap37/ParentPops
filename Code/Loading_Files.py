@@ -76,8 +76,8 @@ if SURVEY == 'HZ': #if we want to do all targeted surveys at once.
 
 IDSURVEY_Dictionary = {1:'SDSS', 4:'SNLS', 10:'DES', 15:'PS1', 150:'FOUND'}
 
-SH_DIC = {'GGN': ['mean', 'stdl', 'stdr', 'n'], 'Gaussian':['mean', 'std'], 
-'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['mean', 'stdl', 'stdr']}
+SH_DIC = {'GGN': ['means', 'stdl', 'stdr', 'n'], 'Gaussian':['means', 'std'], 
+'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['means', 'stdl', 'stdr']}
 SHAPE2 = SH_DIC[SHAPE]
 import distutils.util
 
