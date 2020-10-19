@@ -20,7 +20,8 @@ import sys
 #sys.path.insert(0, EXTRA_FUNC_FILEPATH) 
 import Functions 
 import MI
-
+import Matrix
+import matplotlib.pyplot as plt
 
 import argparse
 parser=argparse.ArgumentParser()
@@ -171,10 +172,26 @@ import Optimiser
 
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
-    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE)
+    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, .2, SHAPE)
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
 elif IT == False:
-    result = optimizer.optimize(Param,DATOT, SHAPE2, dfpre, dfpost, .2, SHAPE, None)
+    result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, .2, SHAPE, None)
+    paramslist = []
+    for vals in result:
+        paramslist.append(result[vals][0])
+    paramslist = np.array(paramslist)
+    if Param == 'x1':
+        LL, plotPredicted, plotData, plotbins = Matrix.Matrix_x(paramslist, DATOT, newmatrix, xbinsize, SHAPE2, debug=True)
+    else:
+        LL, plotPredicted, plotData, plotbins = Matrix.Matrix_c(paramslist, DATOT, newmatrix, cbinsize, SHAPE2, debug=True)
+    plt.figure()
+    plt.scatter(plotbins, plotData, label='Data')
+    plt.plot(plotbins, plotPredicted, label='Predicted', drawstyle='steps-mid')
+    plt.xlabel(Param)
+    plt.ylabel('Count')
+    plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
+    plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
+
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
 else:
     print('oops, you hecked up!')

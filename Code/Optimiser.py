@@ -16,7 +16,7 @@ import csv
 
 class Optimizer_Calculation:
 
-    def optimize(self, Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE, MASS):
+    def optimize(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, MASS):
         dfk = dfdata
         return_dictionary = {}
         
@@ -34,7 +34,7 @@ class Optimizer_Calculation:
 
         DIM = len(SHAPE2)
         if Param == 'c':
-            cI_m = MI.Matrix_c_init(dfpre, dfpost, binsize)
+            cI_m = Migration_Matrix
             if DIM == 4: #transfer this into optimizer method
                 nwalkers = 2*(DIM + 1) - 1
                 ndim = DIM - 1 
@@ -45,7 +45,7 @@ class Optimizer_Calculation:
             p0 = p0/100
             p0 = np.abs(p0)    
         else:
-            cI_m = MI.Matrix_x_init(dfpre, dfpost, binsize)
+            cI_m = Migration_Matrix
             nwalkers = 2*(DIM + 1)
             ndim = DIM
             p0 = np.random.rand(nwalkers, ndim)
@@ -67,11 +67,11 @@ class Optimizer_Calculation:
         
         return return_dictionary
     
-    def optimize_in_range(self, Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE):
+    def optimize_in_range(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE):
         collected_result = []
         
         for m in np.arange(6, 14, .2):
-            calculation = self.optimize(Param, dfdata, SHAPE2, dfpre, dfpost, binsize, SHAPE, m)
+            calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, m)
             
             #A return of an empty dictionary means that specific mass doesn't have enough supernovae
             #to have been worth calculating on. So it's not part of the output.

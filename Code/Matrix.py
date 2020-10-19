@@ -57,7 +57,7 @@ def Matrix_c(params, dfk, cI_m, binsize, SHAPE2, debug=False):
     if (np.abs(cI_mean) > .3): #same as standard deviation.
         LL = -np.inf
     if debug == True:
-        return LL, (Delta_c/Delta_cerr)**2 #I did a lot of debugging.
+        return LL, MP, cdatI, ((bins[1:] + bins[:-1])/2) #I did a lot of debugging.
     else:
         return LL
 
@@ -124,6 +124,6 @@ def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c
         if (a1 < 0 ) or (a2 < 0) or (a1 > 5) or (a2 > 5):
             LL = -np.inf
     if debug == True:
-        return LL, (Delta_x/Delta_xerr)**2
+        return LL, MP, xdatI, ((bins[1:] + bins[:-1])/2)
     else:
         return LL
