@@ -137,8 +137,8 @@ for s in SURVEY:
 
     try: 
         print('That was '+str(IDSURVEY_Dictionary[np.unique(dfdata.IDSURVEY.values)[0]])+' that you just loaded!') #printing the SURVEY ID. 
-    except TypeError:
-        if SURVEY == 'LOWZ':
+    except KeyError:
+        if s == 'LOWZ':
             print('LOWZ')
         else:
             print("Woops! This doesn't correspond to a valid IDSURVEY! Are you loading files correctly?")
