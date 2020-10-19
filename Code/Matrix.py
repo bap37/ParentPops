@@ -73,20 +73,21 @@ def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c
         
         for x in ((bins[1:] + bins[:-1])/2):
             input_xI.append(Functions.ggn(x, *xI))
-        input_xI = np.array(input_xI)
     elif SHAPE2 == 'Gaussian':
         xI_mean, xI_std = params
         xI = [1, xI_mean, xI_std]
         for x in ((bins[1:] + bins[:-1])/2):
             input_xI.append(Functions.gauss(x, *xI))
-        input_xI = np.array(input_xI)
     elif SHAPE2 == 'DGaussian':
         a1, mean1, std1, a2, mean2, std2 = params
         xI = [a1, mean1, std1, a2, mean2, std2]
         for x in ((bins[1:] + bins[:-1])/2):
             input_xI.append(Functions.dgauss(x, *xI))
-        input_xI = np.array(input_xI)
+    else:
+        print('Undefined shape! Abort!')
+        quit
     
+    input_xI = np.array(input_xI)
     MP = np.matmul(input_xI, xI_m)
     MP = MP*((np.sum(xdatI))/np.sum(MP))
     

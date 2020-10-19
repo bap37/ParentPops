@@ -1,7 +1,7 @@
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
 
-REF_FP = "replaceme" #I need to point to the unzipped version of REF.zip!'
+REF_FP = "C:/Users/bapop_000/Desktop/REF/" #I need to point to the unzipped version of REF.zip!'
 if REF_FP == "replaceme":
     print("Did not replace REF_FP with unzipped REF folder.")
     exit()
@@ -179,11 +179,13 @@ elif IT == False:
     paramslist = []
     for vals in result:
         paramslist.append(result[vals][0])
+    paramslist = paramslist[1:]
+    [float(i) for i in paramslist]
     paramslist = np.array(paramslist)
     if Param == 'x1':
-        LL, plotPredicted, plotData, plotbins = Matrix.Matrix_x(paramslist, DATOT, newmatrix, xbinsize, SHAPE2, debug=True)
+        LL, plotPredicted, plotData, plotbins = Matrix.Matrix_x(paramslist, DATOT, newmatrix, xbinsize, SHAPE, debug=True)
     else:
-        LL, plotPredicted, plotData, plotbins = Matrix.Matrix_c(paramslist, DATOT, newmatrix, cbinsize, SHAPE2, debug=True)
+        LL, plotPredicted, plotData, plotbins = Matrix.Matrix_c(paramslist, DATOT, newmatrix, cbinsize, SHAPE, debug=True)
     plt.figure()
     plt.scatter(plotbins, plotData, label='Data')
     plt.plot(plotbins, plotPredicted, label='Predicted', drawstyle='steps-mid')
