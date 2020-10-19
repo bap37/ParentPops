@@ -186,10 +186,12 @@ elif IT == False:
         LL, plotPredicted, plotData, plotbins = Matrix.Matrix_x(paramslist, DATOT, newmatrix, xbinsize, SHAPE, debug=True)
     else:
         LL, plotPredicted, plotData, plotbins = Matrix.Matrix_c(paramslist, DATOT, newmatrix, cbinsize, SHAPE, debug=True)
+    errl,erru = Functions.poisson_interval(plotData)
     plt.figure()
-    plt.scatter(plotbins, plotData, label='Data')
+    plt.errorbar(plotbins, plotData, yerr=[plotData-errl, erru-plotData], label='Data', c='k', fmt='o')
     plt.plot(plotbins, plotPredicted, label='Predicted', drawstyle='steps-mid')
     plt.xlabel(Param)
+    plt.legend()
     plt.ylabel('Count')
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
     plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
