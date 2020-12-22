@@ -48,6 +48,7 @@ parser.add_argument('--MODEL', help='Toggle to True if using the C11 scatter mod
 #parser.add_argument('--Iteration', help='Are you using a Gaussian distribution? If so, this should be true.', default=False) #junk.
 parser.add_argument('--TYPE', help='Is your sample spectroscopic? default= No.') #HIGH Priority. Photometry is the future of SNIa cosmology
 parser.add_argument('--ITERATIVE', help='Make this option False if you want to marginalise over MASS', default=True)
+parser.add_argument('--REF', help='Set a custom REF directory.', default=str(REF_FP))
 #A choice of distribution shapes is desired but difficult. Can discuss more. 
 
 args = parser.parse_args()
@@ -63,6 +64,7 @@ MODEL = args.MODEL
 TYPE = args.TYPE
 SHAPE = args.SHAPE
 IT = args.ITERATIVE
+REF_FP = args.REF
 
 import distutils.util
 IT = distutils.util.strtobool(IT)
