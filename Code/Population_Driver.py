@@ -3,7 +3,7 @@
 import os
 
 REF_FP = "$REF_FILEPATH" #I need to point to the unzipped version of REF.zip!'
-if os.getenv("$REF_FILEPATH") is None:
+if os.getenv("REF_FILEPATH") is None:
     print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
     exit()
 
