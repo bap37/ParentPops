@@ -1,9 +1,10 @@
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
+import os
 
-REF_FP = "C:/Users/bapop_000/Desktop/REF/" #I need to point to the unzipped version of REF.zip!'
-if REF_FP == "replaceme":
-    print("Did not replace REF_FP with unzipped REF folder.")
+REF_FP = "$REF_FILEPATH" #I need to point to the unzipped version of REF.zip!'
+if os.getenv("$REF_FILEPATH") is None:
+    print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
     exit()
 
 #Ideally we'd like to be able to load a couple different options here.
