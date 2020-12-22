@@ -116,16 +116,21 @@ for s in SURVEY:
         if TYPE == 'PHOT':
             print(REF_FP+SURVEY+TYPE+MODEL)
             print("That file does not exist! Are you sure there's a photometric sample available!")
+            sys.stdout.flush()
     except NameError:
         print('Probably forgot a slash somewhere, check your filepath')
         #print(filepath)
+        sys.stdout.flush()
         
     #This block needs to be run for every SURVEY+TYPE+MODEL. 
-    print('Loading True Population...')
+    print('Loading True Simulated Population...')
+    sys.stdout.flush()
     dfpre = pd.read_csv(filename1, header=None, skiprows=StartRow1,names=Names1, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, dtype={'S2c':float, 'S2x1':float, 'CID': int}, comment='#')
-    print('Loading Observed Population...')
+    print('Loading Observed Simulated Population...')
+    sys.stdout.flush()
     dfdata = pd.read_csv(filename2, header=None, skiprows=StartRow2,names=Names2, delim_whitespace=True)
     print('Loading Real Data...')
+    sys.stdout.flush()
     dfpost = pd.read_csv(filename3, header=None, skiprows=StartRow3,names=Names3, delim_whitespace=True)
     #dfpre.CID = pd.to_numeric(dfpre.CID, errors='coerce') #sometimes the CIDs are stored as strings. Don't want that. 
     dfpre = dfpre.loc[dfpre.CID == dfpre.CID] #Getting rid of nans
@@ -134,15 +139,18 @@ for s in SURVEY:
     #dfpre.S2x1 = pd.to_numeric(dfpre.S2x1, errors='coerce') #Likewise, this is the "true" stretch.
     #I think I've upgraded the loading procedures enough that the forcing numeric can be commented out. Leaving it just in case.
 
-    print(str(100*len(dfdata.loc[dfdata.HOST_LOGMASS > 3])/len(dfdata))+"% of the sample can be used...") #Just reading out the number of supernovae in each survey
-
+    print(str(100*len(dfdata.loc[dfdata.HOST_LOGMASS > 3])/len(dfdata))+"% of the sample has valid mass...") #Just reading out the number of supernovae in each survey
+    sys.stdout.flush()
     try: 
         print('That was '+str(IDSURVEY_Dictionary[np.unique(dfdata.IDSURVEY.values)[0]])+' that you just loaded!') #printing the SURVEY ID. 
+        sys.stdout.flush()
     except KeyError:
         if s == 'LOWZ':
             print('LOWZ')
+            sys.stdout.flush()
         else:
             print("Woops! This doesn't correspond to a valid IDSURVEY! Are you loading files correctly?")
+            sys.stdout.flush()
             quit()
 
  
