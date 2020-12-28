@@ -74,7 +74,7 @@ cbinsize=0.02
 
 
 if SURVEY == 'HZ': #if we want to do all targeted surveys at once.
-    SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1', 'FOUND']
+    SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1']
 
 
 
@@ -158,8 +158,10 @@ for s in SURVEY:
  
     if Param == 'c':
         matrixdic[s+Param] = MI.Matrix_c_init(dfpre, dfpost, cbinsize)
+        binsize  = cbinsize
     else:
         matrixdic[s+Param] = MI.Matrix_x_init(dfpre, dfpost, xbinsize)
+        binsize = xbinsize
     if count == 0:
         DATOT = dfdata[['CID','x1', 'c', 'HOST_LOGMASS', 'zHD']] #The important parameters.
     else:
@@ -183,10 +185,10 @@ import Optimiser
 
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
-    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, .2, SHAPE)
+    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE)
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
 elif IT == False:
-    result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, .2, SHAPE, None)
+    result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None)
     paramslist = []
     for vals in result:
         paramslist.append(result[vals][0])
@@ -206,7 +208,7 @@ elif IT == False:
     plt.ylabel('Count')
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
     plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
-
+    print(np.sum(((plotData-plotPredicted)**2)/(erru-plotData)**2))
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
 else:
     print('oops, you hecked up!')
