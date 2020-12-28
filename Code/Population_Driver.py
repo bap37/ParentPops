@@ -5,7 +5,7 @@ import os
 REF_FP = "$REF_FILEPATH" #I need to point to the unzipped version of REF.zip!'
 if os.getenv("REF_FILEPATH") is None:
     print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
-    exit()
+    quit()
 
 #Ideally we'd like to be able to load a couple different options here.
 #Select arbitrary combination of SURVEY/TYPE/MODEL
@@ -73,15 +73,15 @@ xbinsize=.2
 cbinsize=0.02
 
 
-if SURVEY == 'HZ': #if we want to do all targeted surveys at once.
+if SURVEY == 'HIZ': #if we want to do all targeted surveys at once.
     SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1']
 
 
 
 IDSURVEY_Dictionary = {1:'SDSS', 4:'SNLS', 10:'DES', 15:'PS1', 150:'FOUND'}
 
-SH_DIC = {'GGN': ['means', 'stdl', 'stdr', 'n'], 'Gaussian':['means', 'std'], 
-'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['means', 'stdl', 'stdr']}
+SH_DIC = {'GGNN': ['means', 'stdl', 'stdr', 'n'], 'Gaussian':['means', 'std'], 
+'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['means', 'stdl', 'stdr'], 'GGN': ['means', 'stdl', 'stdr', 'n']}
 SHAPE2 = SH_DIC[SHAPE]
 import distutils.util
 
@@ -186,7 +186,7 @@ import Optimiser
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
     result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE)
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, REF_FP)
 elif IT == False:
     result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None)
     paramslist = []
@@ -209,6 +209,6 @@ elif IT == False:
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
     plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
     print(np.sum(((plotData-plotPredicted)**2)/(erru-plotData)**2))
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param, REF_FP)
 else:
     print('oops, you hecked up!')
