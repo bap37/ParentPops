@@ -11,7 +11,7 @@ def Matrix_c(params, dfk, cI_m, binsize, SHAPE2, debug=False):
     bins = np.arange(-.4,.41,binsize)
     cdatI = np.histogram(dfk.c.values, bins=bins)[0] #A histogram of the data
     input_cI = []
-    if SHAPE2 == 'GGN':    
+    if (SHAPE2 == 'GGN') or (SHAPE2 == 'GGNN'):    
         cI_mean, cI_l, cI_r = params
         cI = [1, cI_mean, cI_l, cI_r]
         

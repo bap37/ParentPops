@@ -35,7 +35,7 @@ class Optimizer_Calculation:
         DIM = len(SHAPE2)
         if Param == 'c':
             cI_m = Migration_Matrix
-            if DIM == 4: #transfer this into optimizer method
+            if DIM == 4: #transfer this into optimizer method. 
                 nwalkers = 2*(DIM + 1) - 1
                 ndim = DIM - 1 
             else: 
@@ -46,9 +46,12 @@ class Optimizer_Calculation:
             p0 = np.abs(p0)    
         else:
             cI_m = Migration_Matrix
-            if DIM == 4: #transfer this into optimizer method
+            if SHAPE == 'GGN': #transfer this into optimizer method.  
                 nwalkers = 2*(DIM + 1) - 1
                 ndim = DIM - 1 
+            else:
+                nwalkers = 2*(DIM + 1)
+                ndim = DIM 
             p0 = np.random.rand(nwalkers, ndim)
             p0 = p0/100
             p0 = np.abs(p0)
