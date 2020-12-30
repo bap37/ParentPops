@@ -3,8 +3,9 @@
 import os
 if os.getenv("REF_FILEPATH") is None:
     print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
+    print("REF_FILEPATH=", os.getenv("REF_FILEPATH"))
     quit()
- else:
+else:
     REF_FP = os.getenv("REF_FILEPATH") + "/"
 
 #Ideally we'd like to be able to load a couple different options here.
@@ -107,22 +108,18 @@ for s in SURVEY:
     #TYPE is SPEC or PHOT, depending. Not all surveys have both, so some error trapping is necessary.
     #MODEL is G10 or C11.
     #Right now this is hardcoded for G10, which is unlabeled, but something that will be fixed when this moves off of my computer and into a more public space. 
+    filename1 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_PRE.FITRES'
+    filename2 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MASS_0_DATA.FITRES'
+    filename3 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_POST.FITRES'
     try:
-        filename1 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_PRE.FITRES'
-        filename2 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MASS_0_DATA.FITRES'
-        filename3 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_POST.FITRES'
         Names1, StartRow1 = Functions.NAndR(filename1)
         Names2, StartRow2 = Functions.NAndR(filename2)
         Names3, StartRow3 = Functions.NAndR(filename3)
-    except FileNotFoundError:
-        if TYPE == 'PHOT':
-            print(REF_FP+SURVEY+TYPE+MODEL)
-            print("That file does not exist! Are you sure there's a photometric sample available!")
-            sys.stdout.flush()
-    except NameError:
+    except FileNotFoundError or NameError:
         print('Probably forgot a slash somewhere, check your filepath')
-        #print(filepath)
+        print("Your current filepath is: ", REF_FP)
         sys.stdout.flush()
+        quit()
         
     #This block needs to be run for every SURVEY+TYPE+MODEL. 
     print('Loading True Simulated Population...')
@@ -155,7 +152,10 @@ for s in SURVEY:
             sys.stdout.flush()
             quit()
 
- 
+    except TypeError:
+        print("uhhh, looks like something's up with the IDSURVEY value in your FITRES file! I can't look up the value in the name dictionary. This doesn't mean anything's gone terribly wrong, but it's worth checking out!")
+        sys.stdout.flush()
+
     if Param == 'c':
         matrixdic[s+Param] = MI.Matrix_c_init(dfpre, dfpost, cbinsize)
         binsize  = cbinsize
@@ -179,8 +179,6 @@ for num,s in enumerate(SURVEY):
     else:
         newmatrix += matrixdic[s+Param]*(lensdic[s+Param] / q)
 
-print(len(DATOT))
-print(IT)
 import Optimiser
 
 optimizer = Optimiser.Optimizer_Calculation()
