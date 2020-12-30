@@ -5,7 +5,7 @@ if os.getenv("REF_FILEPATH") is None:
     print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
     quit()
  else:
-    REF_FP = os.getenv("REF_FILEPATH")
+    REF_FP = os.getenv("REF_FILEPATH") + "/"
 
 #Ideally we'd like to be able to load a couple different options here.
 #Select arbitrary combination of SURVEY/TYPE/MODEL
