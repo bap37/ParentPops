@@ -205,7 +205,7 @@ elif IT == False:
     plt.legend()
     plt.ylabel('Count')
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
-    plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
+    plt.savefig(REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
     print(np.sum(((plotData-plotPredicted)**2)/(erru-plotData)**2))
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param, REF_FP)
 else:
