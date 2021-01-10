@@ -3,9 +3,6 @@
 import os
 
 REF_FP = "$REF_FILEPATH" #I need to point to the unzipped version of REF.zip!'
-if os.getenv("REF_FILEPATH") is None:
-    print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
-    exit()
 
 #Ideally we'd like to be able to load a couple different options here.
 #Select arbitrary combination of SURVEY/TYPE/MODEL
@@ -49,6 +46,7 @@ parser.add_argument('--MODEL', help='Toggle to True if using the C11 scatter mod
 parser.add_argument('--TYPE', help='Is your sample spectroscopic? default= No.') #HIGH Priority. Photometry is the future of SNIa cosmology
 parser.add_argument('--ITERATIVE', help='Make this option False if you want to marginalise over MASS', default=True)
 parser.add_argument('--REF', help='Set a custom REF directory.', default=str(REF_FP))
+parser.add_argument('--OUTDIR', help='A path to the directory in which outputs will be written to.', default=None)
 #A choice of distribution shapes is desired but difficult. Can discuss more. 
 
 args = parser.parse_args()
@@ -66,8 +64,22 @@ SHAPE = args.SHAPE
 IT = args.ITERATIVE
 REF_FP = args.REF
 
+if REF_FP == "$REF_FILEPATH":
+    print("No valid file path has been provided for input.")
+    quit()
+
+#This is possibly unnecessary
+if(args.OUTDIR is None):
+    print("No output path has been provided; outputs will be written to the same dir as the program.")
+    path = None
+else:
+    print("Output path is " + args.OUTDIR)
+    path = args.OUTDIR
+
+
 import distutils.util
-IT = distutils.util.strtobool(IT)
+if(type(IT) is str):
+    IT = distutils.util.strtobool(IT)
 
 xbinsize=.2
 cbinsize=0.02
@@ -186,7 +198,7 @@ import Optimiser
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
     result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE)
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, path)
 elif IT == False:
     result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None)
     paramslist = []
@@ -209,6 +221,6 @@ elif IT == False:
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
     plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
     print(np.sum(((plotData-plotPredicted)**2)/(erru-plotData)**2))
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param, path)
 else:
     print('oops, you hecked up!')

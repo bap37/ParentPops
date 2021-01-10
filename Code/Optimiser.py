@@ -83,14 +83,20 @@ class Optimizer_Calculation:
         
         return collected_result
     
-    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param):
-        if not os.path.exists("output"):
+    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param, path_to_output):
+        
+        if path_to_output is None and not os.path.exists("output"):
             os.mkdir("output")
+            file_name = "output/"
+        elif not os.path.exists(''.join([path_to_output,"/output"])):
+            os.mkdir(''.join([path_to_output, "/output"]))
+            file_name = ''.join([path_to_output, "/output/"])
+        
+        file_name = ''.join([file_name, '_'.join([TYPE, SHAPE, MODEL, Param])])
 
-        file_name = "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param
-        for survey in SURVEY:
-            file_name += "_" + survey
-        file_name += ".tsv" 
+        file_name = '_'.join([file_name, '_'.join(SURVEY)])
+
+        file_name = ''.join([file_name, ".tsv"])
 
         with open(file_name, mode='w', newline='\n') as outFile:
             outFileWriter = csv.writer(outFile, delimiter = '\t')
