@@ -52,9 +52,20 @@ class Optimizer_Calculation:
             else:
                 nwalkers = 2*(DIM + 1)
                 ndim = DIM 
-            p0 = np.random.rand(nwalkers, ndim)
-            p0 = p0/100
-            p0 = np.abs(p0)
+            if SHAPE == 'DGaussian':
+                p0 = np.random.rand(nwalkers, ndim)
+                p0 = np.random.rand(nwalkers, ndim)      
+                #p0 = p0/100
+                p0 = np.abs(p0) 
+                for q in range(len(p0[:,0])):
+                    p0[q,1] = np.random.normal(-1,.1,1)
+                    p0[q,4] = np.random.normal(1,.1,1)
+                    p0[q,0] = np.random.normal(1,.1,1)
+                    p0[q,3] = np.random.normal(1,.1,1)
+            else:
+                p0 = np.random.rand(nwalkers, ndim)
+                p0 = p0/100
+                p0 = np.abs(p0)
         if Param == 'c':
             sampler = emcee.EnsembleSampler(nwalkers, ndim, Matrix.Matrix_c, args=[dfk, cI_m, binsize, SHAPE])
         else:

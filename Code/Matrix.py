@@ -131,13 +131,17 @@ def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c
         if (np.abs(xI_mean) > 3):
             LL = -np.inf
     elif SHAPE2 == 'DGaussian': #a1, mean1, std1, a2, mean2, std2 = params
-        if (std1 < 0) or (std2 < 0):
+        if (std1/std2 > 4) or (std2/std1 > 4):
             LL = -np.inf
+        if (std1 < 0) or (std2 < 0):     
+            LL = -np.inf  
         if (std1 > 3) or (std2 > 3):
             LL = -np.inf
         if (np.abs(mean1) > 3) or (np.abs(mean2) > 3):
             LL = -np.inf
-        if (a1 < 0 ) or (a2 < 0) or (a1 > 5) or (a2 > 5):
+        if (a1 < 0.0) or (a2 < 0.0) or (a1 > 5) or (a2 > 5):
+            LL = -np.inf
+        if (mean2 < 0) or (mean1 > 0):
             LL = -np.inf
     if debug == True:
         return LL, MP, xdatI, ((bins[1:] + bins[:-1])/2)

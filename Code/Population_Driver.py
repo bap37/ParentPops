@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
 import os
@@ -127,10 +128,10 @@ for s in SURVEY:
     dfpre = pd.read_csv(filename1, header=None, skiprows=StartRow1,names=Names1, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, dtype={'S2c':float, 'S2x1':float, 'CID': int}, comment='#')
     print('Loading Observed Simulated Population...')
     sys.stdout.flush()
-    dfdata = pd.read_csv(filename2, header=None, skiprows=StartRow2,names=Names2, delim_whitespace=True)
+    dfdata = pd.read_csv(filename2, header=None, skiprows=StartRow2,names=Names2, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, comment='#')
     print('Loading Real Data...')
     sys.stdout.flush()
-    dfpost = pd.read_csv(filename3, header=None, skiprows=StartRow3,names=Names3, delim_whitespace=True)
+    dfpost = pd.read_csv(filename3, header=None, skiprows=StartRow3,names=Names3, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, comment='#')
     #dfpre.CID = pd.to_numeric(dfpre.CID, errors='coerce') #sometimes the CIDs are stored as strings. Don't want that. 
     dfpre = dfpre.loc[dfpre.CID == dfpre.CID] #Getting rid of nans
     #dfpre.CID = dfpre.CID.astype(int) #setting type. 
@@ -169,6 +170,7 @@ for s in SURVEY:
     lensdic[s+Param] = len(dfdata.loc[dfdata.HOST_LOGMASS > 3])
     count += 1 #I think this is fairly obvious?
 
+
 q = 0
 for s in SURVEY:
     q += lensdic[s+Param]
@@ -181,9 +183,10 @@ for num,s in enumerate(SURVEY):
 
 import Optimiser
 
+
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
-    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE)
+    result = optimizer.optimize_in_range(Param, DATOT, SHAPE2, newmatrix, binsize, SHAPE)
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, REF_FP)
 elif IT == False:
     result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None)
