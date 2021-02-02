@@ -1,11 +1,13 @@
+#!/usr/bin/env python
 #Define config variables up here
 #Right now this only works when run in command line with the relevant arguments.
 import os
-
-REF_FP = "$REF_FILEPATH" #I need to point to the unzipped version of REF.zip!'
 if os.getenv("REF_FILEPATH") is None:
     print("Please define $REF_FILEPATH as an environmental variable. It needs to point to where your input files are.")
-    exit()
+    print("REF_FILEPATH=", os.getenv("REF_FILEPATH"))
+    quit()
+else:
+    REF_FP = os.getenv("REF_FILEPATH") + "/"
 
 #Ideally we'd like to be able to load a couple different options here.
 #Select arbitrary combination of SURVEY/TYPE/MODEL
@@ -48,7 +50,7 @@ parser.add_argument('--MODEL', help='Toggle to True if using the C11 scatter mod
 #parser.add_argument('--Iteration', help='Are you using a Gaussian distribution? If so, this should be true.', default=False) #junk.
 parser.add_argument('--TYPE', help='Is your sample spectroscopic? default= No.') #HIGH Priority. Photometry is the future of SNIa cosmology
 parser.add_argument('--ITERATIVE', help='Make this option False if you want to marginalise over MASS', default=True)
-parser.add_argument('--REF', help='Set a custom REF directory.', default=str(REF_FP))
+parser.add_argument('--REF', help='Set a custom REF directory.', default=os.getenv("REF_FILEPATH") + "/")
 #A choice of distribution shapes is desired but difficult. Can discuss more. 
 
 args = parser.parse_args()
@@ -73,15 +75,15 @@ xbinsize=.2
 cbinsize=0.02
 
 
-if SURVEY == 'HZ': #if we want to do all targeted surveys at once.
+if SURVEY == 'HIZ': #if we want to do all targeted surveys at once.
     SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1']
 
 
 
 IDSURVEY_Dictionary = {1:'SDSS', 4:'SNLS', 10:'DES', 15:'PS1', 150:'FOUND'}
 
-SH_DIC = {'GGN': ['means', 'stdl', 'stdr', 'n'], 'Gaussian':['means', 'std'], 
-'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['means', 'stdl', 'stdr']}
+SH_DIC = {'GGNN': ['means', 'stdl', 'stdr', 'n'], 'Gaussian':['means', 'std'], 
+'DGaussian':['a1', 'mean1', 'std1', 'a2', 'mean2', 'std2'], 'AGaussian':['means', 'stdl', 'stdr'], 'GGN': ['means', 'stdl', 'stdr', 'nfake']}
 SHAPE2 = SH_DIC[SHAPE]
 import distutils.util
 
@@ -107,22 +109,18 @@ for s in SURVEY:
     #TYPE is SPEC or PHOT, depending. Not all surveys have both, so some error trapping is necessary.
     #MODEL is G10 or C11.
     #Right now this is hardcoded for G10, which is unlabeled, but something that will be fixed when this moves off of my computer and into a more public space. 
+    filename1 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_PRE.FITRES'
+    filename2 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MASS_0_DATA.FITRES'
+    filename3 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_POST.FITRES'
     try:
-        filename1 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_PRE.FITRES'
-        filename2 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MASS_0_DATA.FITRES'
-        filename3 = REF_FP+s+'_'+TYPE+'_'+MODEL+'/MATRIX_POST.FITRES'
         Names1, StartRow1 = Functions.NAndR(filename1)
         Names2, StartRow2 = Functions.NAndR(filename2)
         Names3, StartRow3 = Functions.NAndR(filename3)
-    except FileNotFoundError:
-        if TYPE == 'PHOT':
-            print(REF_FP+SURVEY+TYPE+MODEL)
-            print("That file does not exist! Are you sure there's a photometric sample available!")
-            sys.stdout.flush()
-    except NameError:
+    except FileNotFoundError or NameError:
         print('Probably forgot a slash somewhere, check your filepath')
-        #print(filepath)
+        print("Your current filepath is: ", REF_FP)
         sys.stdout.flush()
+        quit()
         
     #This block needs to be run for every SURVEY+TYPE+MODEL. 
     print('Loading True Simulated Population...')
@@ -130,10 +128,10 @@ for s in SURVEY:
     dfpre = pd.read_csv(filename1, header=None, skiprows=StartRow1,names=Names1, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, dtype={'S2c':float, 'S2x1':float, 'CID': int}, comment='#')
     print('Loading Observed Simulated Population...')
     sys.stdout.flush()
-    dfdata = pd.read_csv(filename2, header=None, skiprows=StartRow2,names=Names2, delim_whitespace=True)
+    dfdata = pd.read_csv(filename2, header=None, skiprows=StartRow2,names=Names2, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, comment='#')
     print('Loading Real Data...')
     sys.stdout.flush()
-    dfpost = pd.read_csv(filename3, header=None, skiprows=StartRow3,names=Names3, delim_whitespace=True)
+    dfpost = pd.read_csv(filename3, header=None, skiprows=StartRow3,names=Names3, delim_whitespace=True, skip_blank_lines=True, error_bad_lines=False, comment='#')
     #dfpre.CID = pd.to_numeric(dfpre.CID, errors='coerce') #sometimes the CIDs are stored as strings. Don't want that. 
     dfpre = dfpre.loc[dfpre.CID == dfpre.CID] #Getting rid of nans
     #dfpre.CID = dfpre.CID.astype(int) #setting type. 
@@ -155,7 +153,10 @@ for s in SURVEY:
             sys.stdout.flush()
             quit()
 
- 
+    except TypeError:
+        print("uhhh, looks like something's up with the IDSURVEY value in your FITRES file! I can't look up the value in the name dictionary. This doesn't mean anything's gone terribly wrong, but it's worth checking out!")
+        sys.stdout.flush()
+
     if Param == 'c':
         matrixdic[s+Param] = MI.Matrix_c_init(dfpre, dfpost, cbinsize)
         binsize  = cbinsize
@@ -169,6 +170,7 @@ for s in SURVEY:
     lensdic[s+Param] = len(dfdata.loc[dfdata.HOST_LOGMASS > 3])
     count += 1 #I think this is fairly obvious?
 
+
 q = 0
 for s in SURVEY:
     q += lensdic[s+Param]
@@ -179,14 +181,13 @@ for num,s in enumerate(SURVEY):
     else:
         newmatrix += matrixdic[s+Param]*(lensdic[s+Param] / q)
 
-print(len(DATOT))
-print(IT)
 import Optimiser
+
 
 optimizer = Optimiser.Optimizer_Calculation()
 if IT == True:
-    result = optimizer.optimize_in_range(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE)
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param)
+    result = optimizer.optimize_in_range(Param, DATOT, SHAPE2, newmatrix, binsize, SHAPE)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, REF_FP)
 elif IT == False:
     result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None)
     paramslist = []
@@ -207,8 +208,8 @@ elif IT == False:
     plt.legend()
     plt.ylabel('Count')
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
-    plt.savefig("output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
+    plt.savefig(REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
     print(np.sum(((plotData-plotPredicted)**2)/(erru-plotData)**2))
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param, REF_FP)
 else:
     print('oops, you hecked up!')

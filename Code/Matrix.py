@@ -11,7 +11,7 @@ def Matrix_c(params, dfk, cI_m, binsize, SHAPE2, debug=False):
     bins = np.arange(-.4,.41,binsize)
     cdatI = np.histogram(dfk.c.values, bins=bins)[0] #A histogram of the data
     input_cI = []
-    if SHAPE2 == 'GGN':    
+    if (SHAPE2 == 'GGN') or (SHAPE2 == 'GGNN'):    
         cI_mean, cI_l, cI_r = params
         cI = [1, cI_mean, cI_l, cI_r]
         
@@ -64,10 +64,18 @@ def Matrix_c(params, dfk, cI_m, binsize, SHAPE2, debug=False):
 
 
 def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c, but for stretch.
-    bins = np.arange(-3,3.1,binsize)
+    bins = np.arange(-4,4.1,binsize)
     xdatI = np.histogram(dfk.x1.values, bins=bins)[0]
     input_xI = []
+
     if SHAPE2 == 'GGN':    
+        xI_mean, xI_l, xI_r = params
+        xI = [1, xI_mean, xI_l, xI_r, 3]
+        
+        for x in ((bins[1:] + bins[:-1])/2):
+            input_xI.append(Functions.ggn(x, *xI))
+
+    elif SHAPE2 == 'GGNN':    
         xI_mean, xI_l, xI_r, xI_n = params
         xI = [1, xI_mean, xI_l, xI_r, xI_n]
         
@@ -106,7 +114,7 @@ def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c
     LL = -np.sum(chi2)/2.
     if LL != LL: 
         LL = -np.inf
-    if SHAPE2 == 'GGN': #if statements sorted by thematic consistency 
+    if SHAPE2 == 'GGNN': #if statements sorted by thematic consistency 
         if (xI_l < 0) or (xI_r < 0):
             LL = -np.inf
         if (xI_l > 3) or (xI_r > 3):
@@ -115,14 +123,25 @@ def Matrix_x(params, dfk, xI_m, binsize, SHAPE2, debug=False): #same as Matrix_c
             LL = -np.inf
         if (np.abs(xI_n) > 4):
             LL = -np.inf
-    elif SHAPE2 == 'DGaussian': #a1, mean1, std1, a2, mean2, std2 = params
-        if (std1 < 0) or (std2 < 0):
+    elif SHAPE2 == 'GGN': #if statements sorted by thematic consistency 
+        if (xI_l < 0) or (xI_r < 0):
             LL = -np.inf
+        if (xI_l > 3) or (xI_r > 3):
+            LL = -np.inf
+        if (np.abs(xI_mean) > 3):
+            LL = -np.inf
+    elif SHAPE2 == 'DGaussian': #a1, mean1, std1, a2, mean2, std2 = params
+        if (std1/std2 > 4) or (std2/std1 > 4):
+            LL = -np.inf
+        if (std1 < 0) or (std2 < 0):     
+            LL = -np.inf  
         if (std1 > 3) or (std2 > 3):
             LL = -np.inf
         if (np.abs(mean1) > 3) or (np.abs(mean2) > 3):
             LL = -np.inf
-        if (a1 < 0 ) or (a2 < 0) or (a1 > 5) or (a2 > 5):
+        if (a1 < 0.0) or (a2 < 0.0) or (a1 > 5) or (a2 > 5):
+            LL = -np.inf
+        if (mean2 < 0) or (mean1 > 0):
             LL = -np.inf
     if debug == True:
         return LL, MP, xdatI, ((bins[1:] + bins[:-1])/2)

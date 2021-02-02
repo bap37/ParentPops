@@ -35,7 +35,7 @@ class Optimizer_Calculation:
         DIM = len(SHAPE2)
         if Param == 'c':
             cI_m = Migration_Matrix
-            if DIM == 4: #transfer this into optimizer method
+            if DIM == 4: #transfer this into optimizer method. 
                 nwalkers = 2*(DIM + 1) - 1
                 ndim = DIM - 1 
             else: 
@@ -46,11 +46,26 @@ class Optimizer_Calculation:
             p0 = np.abs(p0)    
         else:
             cI_m = Migration_Matrix
-            nwalkers = 2*(DIM + 1)
-            ndim = DIM
-            p0 = np.random.rand(nwalkers, ndim)
-            p0 = p0/100
-            p0 = np.abs(p0)
+            if SHAPE == 'GGN': #transfer this into optimizer method.  
+                nwalkers = 2*(DIM + 1) - 1
+                ndim = DIM - 1 
+            else:
+                nwalkers = 2*(DIM + 1)
+                ndim = DIM 
+            if SHAPE == 'DGaussian':
+                p0 = np.random.rand(nwalkers, ndim)
+                p0 = np.random.rand(nwalkers, ndim)      
+                #p0 = p0/100
+                p0 = np.abs(p0) 
+                for q in range(len(p0[:,0])):
+                    p0[q,1] = np.random.normal(-1,.1,1)
+                    p0[q,4] = np.random.normal(1,.1,1)
+                    p0[q,0] = np.random.normal(1,.1,1)
+                    p0[q,3] = np.random.normal(1,.1,1)
+            else:
+                p0 = np.random.rand(nwalkers, ndim)
+                p0 = p0/100
+                p0 = np.abs(p0)
         if Param == 'c':
             sampler = emcee.EnsembleSampler(nwalkers, ndim, Matrix.Matrix_c, args=[dfk, cI_m, binsize, SHAPE])
         else:
@@ -83,11 +98,11 @@ class Optimizer_Calculation:
         
         return collected_result
     
-    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param):
-        if not os.path.exists("output"):
-            os.mkdir("output")
+    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param, REF_FP):
+        if not os.path.exists(REF_FP+"output"):
+            os.mkdir(REF_FP+"output")
 
-        file_name = "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param
+        file_name = REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param
         for survey in SURVEY:
             file_name += "_" + survey
         file_name += ".tsv" 
@@ -104,14 +119,14 @@ class Optimizer_Calculation:
             if(is_series):
                 # We are dealing with multiple iterations
                 for result in result_dictionary:
-                    outFileWriter.writerow(self.row_from_dictionary(result, SHAPE2))
+                    outFileWriter.writerow(self.row_from_dictionary(result, SHAPE2, Param))
 
             else:
-                outFileWriter.writerow(self.row_from_dictionary(result_dictionary, SHAPE2))
+                outFileWriter.writerow(self.row_from_dictionary(result_dictionary, SHAPE2, Param))
 
         print("Written To File")
     
-    def row_from_dictionary(self, dictionary, SHAPE2):
+    def row_from_dictionary(self, dictionary, SHAPE2, Param):
         row = [dictionary["MASS"]]
         for shape in SHAPE2:
             try:
@@ -120,7 +135,10 @@ class Optimizer_Calculation:
             except KeyError:
                     for rest in range(2): #This absolutely needs to be fixed.
                         if rest == 0:
-                            row.append(str(2))
+                            if Param == 'c':
+                                row.append(str(2))
+                            else:
+                                row.append(str(3))
                         else:
                             row.append(str(0))
 

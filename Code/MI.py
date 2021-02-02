@@ -34,9 +34,9 @@ def Matrix_c_init(dfpre, dfpost, binsize):
 def Matrix_x_init(dfpre, dfpost, binsize): #same as the colour probability matrix, but for stretch (x1).
     send = {}
     length = {}
-    bins = np.arange(-3,3.1,binsize)
+    bins = np.arange(-4,4.1,binsize)
     for i in bins:
-        if i < 3:
+        if i < 4:
             located = dfpre.loc[(dfpre.S2x1 > i ) & (dfpre.S2x1 <= i+binsize)]
             #print(located)                                                                                                         \
                                                                                                                                      
