@@ -94,7 +94,7 @@ if CORR != 'HOST_LOGMASS':
         quit()
 
 
-if SURVEY == 'HIZ': #if we want to do all targeted surveys at once.
+if SURVEY == ['HIZ']: #if we want to do all targeted surveys at once.
     SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1']
 
 
@@ -210,7 +210,7 @@ for num,s in enumerate(SURVEY):
 import Optimiser
 
 if SURVEY == ['DES', 'SNLS', 'SDSS', 'PS1']:
-    SURVEY = 'HIZ'
+    SURVEY = ['HIZ']
 
 
 optimizer = Optimiser.Optimizer_Calculation()
