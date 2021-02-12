@@ -117,7 +117,7 @@ for i in range(len(cmean)):
     x1pdf[str(mass[i])+'_x'] = [x,y]
 
 
-def find_nearest(array, value):
+def find_nearest(array, value): #For a given random value, will find the closest thing in the TSV.
     array = np.asarray(array)
     idx = (np.abs(array - value)).argmin()
     return array[idx]    
@@ -127,8 +127,8 @@ Names1, StartRow1 = NAndR(HOSTLIB)
 df2 = pd.read_csv(HOSTLIB, header=None, skiprows=StartRow1,names=Names1, delim_whitespace=True) 
 
 
-df2['X1'] = -9
-df2['C'] = -9
+df2['X1'] = -9 #Make sure that any previous values are overwritten, just in case.
+df2['C'] = -9 
 
 
 clist = []
