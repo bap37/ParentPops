@@ -3,14 +3,11 @@ import pandas as pd
 import sys
 from scipy import interpolate
 
-SURVEY = 'FOUND' 
+SURVEY = 'FOUND' #Need to take the relevant information from the filename.
 MODEL = 'G10'
 TYPE = 'SPEC'
 SHAPE = 'DGaussian'
 
-#The above four parameters should correspond to the name of the output tsv in /project2/rkessler/SURVEYS/SDSS/USERS/BAP37/POPULATIONS/REF/
-#Need to have already found x1/c 
-#At present this only works with GGN. 
 
 #HOSTLIB = '/project2/rkessler/SURVEYS/SDSS/USERS/BAP37/MASS_paper/AS/HOSTLIBS/F1/ASXC.F1.HOSTLIB' # The HOSTLIB that you want to add information to. It will not be overwritten.
 #HOSTLIB_NEW = '/project2/rkessler/SURVEYS/SDSS/USERS/BAP37/MASS_paper/AS/HOSTLIBS/F1/'+SURVEY+'-'+TYPE+'-'+MODEL+'.HOSTLIB' #The name and filepath of the new HOSTLIB to be generated
@@ -73,6 +70,9 @@ elif SHAPE == 'DGaussian':
     cmean, cl, cr, mass = dfpopsc.means.values, dfpopsc.stdl.values, dfpopsc.stdr.values, dfpopsc.MASS.values 
     xa1, xmean1, xstd1, xa2, xmean2, xstd2 = dfpopsx.a1.values, dfpopsx.mean1.values, dfpopsx.std1.values, dfpopsx.a2.values, dfpopsx.mean2.values, dfpopsx.std2.values
 
+    
+#The process of writing the events to the HOSTLIB begins below.    
+    
 bins =np.arange(-.5,.51,.01)
 xbins = np.arange(-5,5.1,.1)
 
@@ -90,7 +90,7 @@ for i in mass:
 for i in range(len(cmean)):
     temp = []
     for qc in ((bins[1:] + bins[:-1])/2):
-        temp.append(ggn(qc, 1, cmean[i], cl[i], cr[i], 2))
+        temp.append(ggn(qc, 1, cmean[i], cl[i], cr[i], 2)) #Right now, the colour distribution is always an Asymmetric Gaussian. 
     temp = np.array(temp)
     ysum = np.cumsum(temp)
     y = temp
@@ -100,8 +100,8 @@ for i in range(len(cmean)):
     cpdf[str(mass[i])+'_c'] = [x,y]
     
     tempx = []
-    for qx in ((xbins[1:] + xbins[:-1])/2):
-        if SHAPE == 'GGN':
+    for qx in ((xbins[1:] + xbins[:-1])/2): 
+        if SHAPE == 'GGN': #will need to expand this to account for any shape. This for loop is what handles the shape - once the information is stored here we don't need to worry about shape anymore.
             tempx.append(ggn(qx, 1, xmean[i], xl[i], xr[i], xn[i]))
         elif SHAPE == 'DGaussian':
             tempx.append(dgauss(qx, xa1[i], xmean1[i], xstd1[i], xa2[i], xmean2[i], xstd2[i]))
@@ -126,7 +126,7 @@ def find_nearest(array, value):
 Names1, StartRow1 = NAndR(HOSTLIB)        
 df2 = pd.read_csv(HOSTLIB, header=None, skiprows=StartRow1,names=Names1, delim_whitespace=True) 
 
-#skiprows=15 if using the original MATRIX.HOSTLIB
+
 df2['X1'] = -9
 df2['C'] = -9
 
@@ -134,9 +134,9 @@ df2['C'] = -9
 clist = []
 for i in range(len(df2)):
     try:
-        loc = find_nearest(mass, df2.LOGMASS.values[i])
+        loc = find_nearest(mass, df2.LOGMASS.values[i]) #Will need to make sure that we can read any arbitrary value, not just LOGMASS.
     except TypeError:
-        print('Looks like you might not be using the correct TSV file! Make sure that you are pointing to the ITERATIVE == True option')
+        print('Looks like you might not be using the correct TSV file! Make sure that you are pointing to the ITERATIVE == True option') #bad error trap
         quit()
     try:
         clist.append(cdic[str(loc)+'_c'](np.random.uniform(0,1,1))[0])
