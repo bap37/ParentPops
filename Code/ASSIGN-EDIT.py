@@ -7,6 +7,7 @@ SURVEY = 'FOUND' #Need to take the relevant information from the filename.
 MODEL = 'G10'
 TYPE = 'SPEC'
 SHAPE = 'DGaussian'
+CORR = "something" 
 
 
 #HOSTLIB = '/project2/rkessler/SURVEYS/SDSS/USERS/BAP37/MASS_paper/AS/HOSTLIBS/F1/ASXC.F1.HOSTLIB' # The HOSTLIB that you want to add information to. It will not be overwritten.
