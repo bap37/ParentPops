@@ -16,22 +16,32 @@ import csv
 
 class Optimizer_Calculation:
 
-    def optimize(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, MASS):
+    def optimize(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, STEP, CORR, BIN_THINGS):
         dfk = dfdata
         return_dictionary = {}
-        
-        if MASS != None:
-            window = 0.6
-            dfk = dfk.loc[(dfk.HOST_LOGMASS < MASS +window) & (dfk.HOST_LOGMASS >= MASS - window)]
 
+        if STEP != None: #Renamed MASS to STEP, since it's no longer just Mass
+            if (CORR == 'zHD') or (CORR == 'zCMB'):
+                lowbound, highbound = STEP
+                dfk = dfk.loc[(dfk[CORR] >= lowbound) & (dfk[CORR] <=highbound)]
+                STEP = np.mean(lowbound+highbound)
+
+            else:
+                window = BIN_THINGS[3] #Final entry in BIN_THINGS should be window value.
+                dfk = dfk.loc[(dfk[CORR] < STEP + window) & (dfk[CORR] >= STEP - window)]
+            
             #Minimum length: There's no point calculating if the number of supernovae is below 50
             if len(dfk) < 50:
+                print(len(dfk), "Supernovae in this bin")
+                print('Not enough supernova in this bin:', np.around(STEP,3))
+                print("Skipping for now...")
                 return return_dictionary
 
-            return_dictionary["MASS"] = str(round(MASS,3))
+            return_dictionary[CORR] = str(round(STEP,3))
         else:
-            return_dictionary["MASS"] = "ALL"
+            return_dictionary[CORR] = "ALL"
 
+        print("We have this many supernova in the current bin:", len(dfk))
         DIM = len(SHAPE2)
         if Param == 'c':
             cI_m = Migration_Matrix
@@ -82,12 +92,32 @@ class Optimizer_Calculation:
         
         return return_dictionary
     
-    def optimize_in_range(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE):
+    def optimize_in_range(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, CORR, BIN_THINGS):
         collected_result = []
         
-        for m in np.arange(6, 14, .2):
-            calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, m)
-            
+        if (CORR == 'zHD') or (CORR == 'zCMB'):
+            dfdata = dfdata.sort_values(by=['zHD'])       
+            ranger = dfdata.zHD.values[::BIN_THINGS[2]]    
+#            for q in range(len(ranger)):       
+#                try:     
+#                    print(ranger[q], ranger[q+1])   
+#                except IndexError:       
+#                    print(ranger[q-1], dfdata.zHD.values[-1]) 
+            TOTAL_BINS = ranger
+
+        else:
+            TOTAL_BINS = np.arange(BIN_THINGS[0], BIN_THINGS[1], BIN_THINGS[2]) 
+
+        for m in range(len(TOTAL_BINS)):
+            if (CORR == 'zHD') or (CORR == 'zCMB'):
+                try:
+                    _ = TOTAL_BINS[m+1]
+                    calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, (TOTAL_BINS[m], TOTAL_BINS[m+1]), CORR, BIN_THINGS)
+                except IndexError:
+                    pass
+            else:
+                calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, TOTAL_BINS[m], CORR, BIN_THINGS)
+            #def optimize(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, STEP, CORR, BIN_THINGS):
             #A return of an empty dictionary means that specific mass doesn't have enough supernovae
             #to have been worth calculating on. So it's not part of the output.
             if len(calculation) == 0:
@@ -98,11 +128,11 @@ class Optimizer_Calculation:
         
         return collected_result
     
-    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param, REF_FP):
+    def write_to_file(self, result_dictionary, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, is_series, Param, REF_FP, CORR):
         if not os.path.exists(REF_FP+"output"):
             os.mkdir(REF_FP+"output")
 
-        file_name = REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param
+        file_name = REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + "_" + CORR
         for survey in SURVEY:
             file_name += "_" + survey
         file_name += ".tsv" 
@@ -110,7 +140,7 @@ class Optimizer_Calculation:
         with open(file_name, mode='w', newline='\n') as outFile:
             outFileWriter = csv.writer(outFile, delimiter = '\t')
 
-            header = ["MASS"]
+            header = [CORR]
             for column in SHAPE2:
                 header.append(column)
                 header.append(column + '_error')
@@ -119,15 +149,15 @@ class Optimizer_Calculation:
             if(is_series):
                 # We are dealing with multiple iterations
                 for result in result_dictionary:
-                    outFileWriter.writerow(self.row_from_dictionary(result, SHAPE2, Param))
+                    outFileWriter.writerow(self.row_from_dictionary(result, SHAPE2, Param, CORR))
 
             else:
-                outFileWriter.writerow(self.row_from_dictionary(result_dictionary, SHAPE2, Param))
+                outFileWriter.writerow(self.row_from_dictionary(result_dictionary, SHAPE2, Param, CORR))
 
         print("Written To File")
     
-    def row_from_dictionary(self, dictionary, SHAPE2, Param):
-        row = [dictionary["MASS"]]
+    def row_from_dictionary(self, dictionary, SHAPE2, Param, CORR):
+        row = [dictionary[CORR]]
         for shape in SHAPE2:
             try:
                 for result in dictionary[shape]:
@@ -146,3 +176,13 @@ class Optimizer_Calculation:
              #   row.append(str(result))
         return row
 
+
+    def write_MM(self, MM, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, Param, REF_FP, CORR):         
+        if not os.path.exists(REF_FP+"output"):
+            os.mkdir(REF_FP+"output")   
+        file_name = REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + "_" + CORR    
+        for survey in SURVEY:                                   
+            file_name += "_" + survey                  
+        file_name += "_MM"  
+        np.save(file_name, MM)
+        print("Saved Migration Matrix")

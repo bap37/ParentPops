@@ -52,6 +52,17 @@ parser.add_argument('--TYPE', help='Is your sample spectroscopic? default= No.')
 parser.add_argument('--ITERATIVE', help='Make this option False if you want to marginalise over MASS', default=True)
 parser.add_argument('--REF', help='Set a custom REF directory.', default=os.getenv("REF_FILEPATH") + "/")
 #A choice of distribution shapes is desired but difficult. Can discuss more. 
+parser.add_argument('--BINS', help="""For use with custom external properties.
+
+First bin is the minimum value.
+Second bin is the maximum value.
+Third bin is the step size (for np.arange), UNLESS you choose zHD or zCMB. If using redshift, we select a certain number of events per bin, so this will need to be the number of SNe per bin that you want. Needs to be over 50.
+Fourth bin is window size. 
+
+""", default=[6,14,0.2,0.6], nargs= '+')
+parser.add_argument('--CORR', help='Name of the parameter you want to investigate correlations with. Default is HOST_LOGMASS.', default="HOST_LOGMASS")
+
+parser.add_argument('--MM', help="Will save the associated Migration Matrix, but not run the program. Default is False.", default=False, type=bool)
 
 args = parser.parse_args()
 Param = args.PARAM
@@ -67,6 +78,11 @@ TYPE = args.TYPE
 SHAPE = args.SHAPE
 IT = args.ITERATIVE
 REF_FP = args.REF
+BIN_THINGS = args.BINS 
+BIN_THINGS = [float(i) for i in BIN_THINGS]
+BIN_THINGS = [np.around(i,4) for i in BIN_THINGS]
+CORR = args.CORR
+MM = args.MM
 
 import distutils.util
 IT = distutils.util.strtobool(IT)
@@ -74,10 +90,15 @@ IT = distutils.util.strtobool(IT)
 xbinsize=.2
 cbinsize=0.02
 
+if CORR != 'HOST_LOGMASS': 
+    if BIN_THINGS == [6.0, 14.0, 0.2, 0.6]:
+        print("The bins you gave me are the default for HOST_LOGMASS. But you did not specify to use HOST_LOGMASS. Please change your bins; check the help string for --BINS for more info.")
+        print("quitting")
+        quit()
 
-if SURVEY == 'HIZ': #if we want to do all targeted surveys at once.
+
+if SURVEY == ['HIZ']: #if we want to do all targeted surveys at once.
     SURVEY = ['DES', 'SNLS', 'SDSS', 'PS1']
-
 
 
 IDSURVEY_Dictionary = {1:'SDSS', 4:'SNLS', 10:'DES', 15:'PS1', 150:'FOUND'}
@@ -139,6 +160,11 @@ for s in SURVEY:
     #dfpre.S2x1 = pd.to_numeric(dfpre.S2x1, errors='coerce') #Likewise, this is the "true" stretch.
     #I think I've upgraded the loading procedures enough that the forcing numeric can be commented out. Leaving it just in case.
 
+    if CORR not in list(dfdata): #Then we make sure everything's a valid parameter.    
+        print('You need to give a valid variable to look at! You gave me', CORR) 
+        print('Please check your FITRES file. Quitting...')    
+        quit() 
+
     print(str(100*len(dfdata.loc[dfdata.HOST_LOGMASS > 3])/len(dfdata))+"% of the sample has valid mass...") #Just reading out the number of supernovae in each survey
     sys.stdout.flush()
     try: 
@@ -164,10 +190,13 @@ for s in SURVEY:
         matrixdic[s+Param] = MI.Matrix_x_init(dfpre, dfpost, xbinsize)
         binsize = xbinsize
     if count == 0:
-        DATOT = dfdata[['CID','x1', 'c', 'HOST_LOGMASS', 'zHD']] #The important parameters.
+        DATOT = dfdata[['CID','x1', 'c', CORR]] #The important parameters.
     else:
-        DATOT = DATOT.append(dfdata[['CID','x1', 'c', 'HOST_LOGMASS', 'zHD']])
-    lensdic[s+Param] = len(dfdata.loc[dfdata.HOST_LOGMASS > 3])
+        DATOT = DATOT.append(dfdata[['CID','x1', 'c', CORR]])
+    if CORR == 'HOST_LOGMASS':
+        lensdic[s+Param] = len(dfdata.loc[dfdata.HOST_LOGMASS > 3])
+    else:
+        lensdic[s+Param] = len(dfdata)
     count += 1 #I think this is fairly obvious?
 
 
@@ -183,13 +212,22 @@ for num,s in enumerate(SURVEY):
 
 import Optimiser
 
+if SURVEY == ['DES', 'SNLS', 'SDSS', 'PS1']:
+    SURVEY = ['HIZ']
+
 
 optimizer = Optimiser.Optimizer_Calculation()
+
+if MM == True:
+    optimizer.write_MM(newmatrix, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, Param, REF_FP, CORR)
+    print("Quitting... This is an expected closure.")
+    quit()
+
 if IT == True:
-    result = optimizer.optimize_in_range(Param, DATOT, SHAPE2, newmatrix, binsize, SHAPE)
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, REF_FP)
+    result = optimizer.optimize_in_range(Param, DATOT, SHAPE2, newmatrix, binsize, SHAPE, CORR, BIN_THINGS)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, REF_FP, CORR)
 elif IT == False:
-    result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None)
+    result = optimizer.optimize(Param,DATOT, SHAPE2, newmatrix, binsize, SHAPE, None, CORR, BIN_THINGS)
     paramslist = []
     for vals in result:
         paramslist.append(result[vals][0])
@@ -210,6 +248,6 @@ elif IT == False:
     plt.title(TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param)
     plt.savefig(REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + ".pdf", format='pdf')
     print(np.sum(((plotData-plotPredicted)**2)/(erru-plotData)**2))
-    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param, REF_FP)
+    optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, False, Param, REF_FP, CORR)
 else:
     print('oops, you hecked up!')
