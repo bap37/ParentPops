@@ -21,10 +21,15 @@ class Optimizer_Calculation:
         return_dictionary = {}
 
         if STEP != None: #Renamed MASS to STEP, since it's no longer just Mass
-            window = BIN_THINGS[3] #Final entry in BIN_THINGS should be window value.
-            dfk = dfk.loc[(dfk[CORR] < STEP + window) & (dfk[CORR] >= STEP - window)]
-            
+            if (CORR == 'zHD') or (CORR == 'zCMB'):
+                lowbound, highbound = STEP
+                dfk = dfk.loc[(dfk[CORR] >= lowbound) & (dfk[CORR] <=highbound)]
+                STEP = np.mean(lowbound+highbound)
 
+            else:
+                window = BIN_THINGS[3] #Final entry in BIN_THINGS should be window value.
+                dfk = dfk.loc[(dfk[CORR] < STEP + window) & (dfk[CORR] >= STEP - window)]
+            
             #Minimum length: There's no point calculating if the number of supernovae is below 50
             if len(dfk) < 50:
                 print(len(dfk), "Supernovae in this bin")
@@ -36,6 +41,7 @@ class Optimizer_Calculation:
         else:
             return_dictionary[CORR] = "ALL"
 
+        print("We have this many supernova in the current bin:", len(dfk))
         DIM = len(SHAPE2)
         if Param == 'c':
             cI_m = Migration_Matrix
@@ -90,14 +96,28 @@ class Optimizer_Calculation:
         collected_result = []
         
         if (CORR == 'zHD') or (CORR == 'zCMB'):
-            TOTAL_BINS = np.geomspace(BIN_THINGS[0], BIN_THINGS[1], BIN_THINGS[2])
-            print("Please be aware that we are moving through this in log space. The third entry in BIN_THINGS should be number of bins, not step size.")
+            dfdata = dfdata.sort_values(by=['zHD'])       
+            ranger = dfdata.zHD.values[::BIN_THINGS[2]]    
+#            for q in range(len(ranger)):       
+#                try:     
+#                    print(ranger[q], ranger[q+1])   
+#                except IndexError:       
+#                    print(ranger[q-1], dfdata.zHD.values[-1]) 
+            TOTAL_BINS = ranger
+
         else:
             TOTAL_BINS = np.arange(BIN_THINGS[0], BIN_THINGS[1], BIN_THINGS[2]) 
 
-        for m in TOTAL_BINS:
-            calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, m, CORR, BIN_THINGS)
-            
+        for m in range(len(TOTAL_BINS)):
+            if (CORR == 'zHD') or (CORR == 'zCMB'):
+                try:
+                    _ = TOTAL_BINS[m+1]
+                    calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, (TOTAL_BINS[m], TOTAL_BINS[m+1]), CORR, BIN_THINGS)
+                except IndexError:
+                    pass
+            else:
+                calculation = self.optimize(Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, TOTAL_BINS[m], CORR, BIN_THINGS)
+            #def optimize(self, Param, dfdata, SHAPE2, Migration_Matrix, binsize, SHAPE, STEP, CORR, BIN_THINGS):
             #A return of an empty dictionary means that specific mass doesn't have enough supernovae
             #to have been worth calculating on. So it's not part of the output.
             if len(calculation) == 0:
@@ -156,3 +176,13 @@ class Optimizer_Calculation:
              #   row.append(str(result))
         return row
 
+
+    def write_MM(self, MM, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, Param, REF_FP, CORR):         
+        if not os.path.exists(REF_FP+"output"):
+            os.mkdir(REF_FP+"output")   
+        file_name = REF_FP + "output/" + TYPE + "_" + SHAPE + "_" +  MODEL + "_" + Param + "_" + CORR    
+        for survey in SURVEY:                                   
+            file_name += "_" + survey                  
+        file_name += "_MM"  
+        np.save(file_name, MM)
+        print("Saved Migration Matrix")

@@ -56,11 +56,13 @@ parser.add_argument('--BINS', help="""For use with custom external properties.
 
 First bin is the minimum value.
 Second bin is the maximum value.
-Third bin is the step size (for np.arange), UNLESS you choose zHD or zCMB. If using redshift, we will do log-space steps, so the third entry needs to be the number of zbins you want to use. 
+Third bin is the step size (for np.arange), UNLESS you choose zHD or zCMB. If using redshift, we select a certain number of events per bin, so this will need to be the number of SNe per bin that you want. Needs to be over 50.
 Fourth bin is window size. 
 
 """, default=[6,14,0.2,0.6], nargs= '+')
 parser.add_argument('--CORR', help='Name of the parameter you want to investigate correlations with. Default is HOST_LOGMASS.', default="HOST_LOGMASS")
+
+parser.add_argument('--MM', help="Will save the associated Migration Matrix, but not run the program. Default is False.", default=False, type=bool)
 
 args = parser.parse_args()
 Param = args.PARAM
@@ -80,6 +82,7 @@ BIN_THINGS = args.BINS
 BIN_THINGS = [float(i) for i in BIN_THINGS]
 BIN_THINGS = [np.around(i,4) for i in BIN_THINGS]
 CORR = args.CORR
+MM = args.MM
 
 import distutils.util
 IT = distutils.util.strtobool(IT)
@@ -214,6 +217,12 @@ if SURVEY == ['DES', 'SNLS', 'SDSS', 'PS1']:
 
 
 optimizer = Optimiser.Optimizer_Calculation()
+
+if MM == True:
+    optimizer.write_MM(newmatrix, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, Param, REF_FP, CORR)
+    print("Quitting... This is an expected closure.")
+    quit()
+
 if IT == True:
     result = optimizer.optimize_in_range(Param, DATOT, SHAPE2, newmatrix, binsize, SHAPE, CORR, BIN_THINGS)
     optimizer.write_to_file(result, SHAPE2, SURVEY, TYPE, SHAPE, MODEL, True, Param, REF_FP, CORR)
